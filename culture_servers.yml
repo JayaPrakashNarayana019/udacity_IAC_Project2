@@ -11,19 +11,27 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP to our Load Balancer
-      #SecurityGroupEgress:
-       # - IpProtocol: tcp
-        #  FromPort: 80
-         # ToPort: 80
-         # CidrIp: 0.0.0.0/0
-      #SecurityGroupIngress:
-       # - IpProtocol: tcp
-       #   FromPort: 80
-        #  ToPort: 80
-        #  CidrIp: 0.0.0.0/0
       VpcId:
-        Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
-
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+       - IpProtocol: tcp
+         FromPort: 8080
+         ToPort: 8080
+         CidrIp: 0.0.0.0/0
+       - IpProtocol: tcp
+         FromPort: 80
+         ToPort: 80
+         CidrIp: 0.0.0.0/0        
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8080
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
   WebServersSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -75,41 +83,41 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
       MinSize: "4"
       MaxSize: "5"
       TargetGroupARNs:
-        - Ref: WebAppTargetGroup
+      - Ref: WebAppTargetGroup
   WebAppLB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
-        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
-      Securitygroups:
-        - Ref: LBSecGroup
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      SecurityGroups:
+      - Ref: LBSecGroup
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - Type: forward
-          TargetGroupArn:
-            Ref: WebAppTargetGroup
+      - Type: forward
+        TargetGroupArn:
+          Ref: WebAppTargetGroup
       LoadBalancerArn:
         Ref: WebAppLB
-      Port: "80"
+      Port: '80'
       Protocol: HTTP
   ALBListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
-        - Type: forward
-          TargetGroupArn: !Ref "WebAppTargetGroup"
+      - Type: forward
+        TargetGroupArn: !Ref "WebAppTargetGroup"
       Conditions:
-        - Field: path-pattern
-          values: [/]
+      - Field: path-pattern
+        Values: [/]
       ListenerArn: !Ref "Listener"
       Priority: 1
 
@@ -127,3 +135,4 @@ Resources:
       VpcId:
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
+
