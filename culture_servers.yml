@@ -74,7 +74,7 @@ Resources:
       #KeyName: that-one
       SecurityGroups:
         - Ref: WebServersSecGroup
-      InstanceType: t3.medium
+      InstanceType: t2.medium
       BlockDeviceMappings:
         - DeviceName: "/dev/sdk"
           Ebs:
@@ -86,7 +86,7 @@ Resources:
       - Fn::ImportValue: !Sub "${EnvironmentName}-PRIV-NETS"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: "4"
+      MinSize: "1"
       MaxSize: "5"
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
